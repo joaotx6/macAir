@@ -10,7 +10,7 @@ import UIKit
 
 class ToDoListViewController: UITableViewController {
     
-    let itemArray = ["A", "B", "C"]
+    var itemArray = ["A", "B", "C"]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -20,7 +20,6 @@ class ToDoListViewController: UITableViewController {
     //MARK: - DataSource methods
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        
         return itemArray.count
     }
     
@@ -30,7 +29,6 @@ class ToDoListViewController: UITableViewController {
         cell.textLabel?.text = itemArray[indexPath.row]
         return cell
     }
-    
     
     //MARK: - Delegate Methods
     
@@ -50,12 +48,22 @@ class ToDoListViewController: UITableViewController {
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         
-        let alert = UIAlertController(title: "Todo List", message: "", preferredStyle: .alert)
+        var textField = UITextField()
+        
+        let alert = UIAlertController(title: "Todo Item", message: "", preferredStyle: .alert)
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
-            action
+            self.itemArray.append(textField.text!)
+            self.tableView.reloadData()
         }
         
+        alert.addTextField { (alertTextField) in
+            alertTextField.placeholder = "Enter text here"
+            textField = alertTextField
+        }
+
+        alert.addAction(action)
+        present(alert, animated: true, completion: nil)
     }
 }
 
