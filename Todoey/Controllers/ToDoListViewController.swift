@@ -12,28 +12,12 @@ class ToDoListViewController: UITableViewController {
     
     var itemArray = [Item]()
     
-    let defaults = UserDefaults.standard
+    var dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathExtension("Items.plist")
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let newItem = Item()
-        newItem.title = "A"
-        itemArray.append(newItem)
-        
-        let newItem2 = Item()
-        newItem2.title = "B"
-        itemArray.append(newItem2)
-        
-        let newItem3 = Item()
-        newItem3.title = "C"
-        itemArray.append(newItem3)
-        
-        
-        if let items = defaults.array(forKey: "ToDoListArray") as? [Item] {
-            itemArray = items
-        }
-        
+        loadItems()
     }
     
     //MARK: - DataSource methods
@@ -52,19 +36,20 @@ class ToDoListViewController: UITableViewController {
         
         // ternary operator: value = condition ? valueIfTrue : valueIfFalse
         cell.accessoryType = item.done == true ? .checkmark : .none
-                                            //se for true faz .checkmark; caso contrário faz .none
+        //se for true faz .checkmark; caso contrário faz .none
         return cell
     }
     
     //MARK: - Delegate Methods
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-
+        
         
         // o itemArray é = ao oposto do k for atualmente. Se for true fica false e vice-versa. Graças ao !
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
-        tableView.reloadData()
+        saveItems()
+        
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
@@ -82,19 +67,44 @@ class ToDoListViewController: UITableViewController {
             newItem.title = textField.text!
             
             self.itemArray.append(newItem)
-             
-            self.defaults.set(self.itemArray, forKey: "ToDoListArray")
             
-            self.tableView.reloadData()
+            self.saveItems()
         }
         
         alert.addTextField { (alertTextField) in
             alertTextField.placeholder = "Enter text here"
             textField = alertTextField
         }
-
+        
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
     }
+    
+    //MARK: - Model manipulation methods
+    
+    func saveItems() {
+        
+        let encoder = PropertyListEncoder()
+        
+        do {
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        } catch {
+            print("error encoding data array \(error)")
+        }
+        tableView.reloadData()
+        
+    }
+    
+    func loadItems() {
+        
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            do {
+                itemArray = try decoder.decode([Item].self, from: data)
+            } catch {
+                print("error decoding data array \(error)")
+            }
+        }
+    }
 }
-
