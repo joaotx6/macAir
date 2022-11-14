@@ -7,17 +7,22 @@
 //
 
 import UIKit
+import CoreData
 
 class ToDoListViewController: UITableViewController {
+    
     
     var itemArray = [Item]()
     
     var dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathExtension("Items.plist")
     
+    //para aceder ao persistentContainer do appDelegate:
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        loadItems()
+    
+       // loadItems()
     }
     
     //MARK: - DataSource methods
@@ -34,7 +39,8 @@ class ToDoListViewController: UITableViewController {
         
         cell.textLabel?.text = item.title
         
-        // ternary operator: value = condition ? valueIfTrue : valueIfFalse
+        // ternary operator:
+        // value = condition ? valueIfTrue : valueIfFalse
         cell.accessoryType = item.done == true ? .checkmark : .none
         //se for true faz .checkmark; caso contrário faz .none
         return cell
@@ -45,7 +51,9 @@ class ToDoListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         
-        // o itemArray é = ao oposto do k for atualmente. Se for true fica false e vice-versa. Graças ao !
+        /* o itemArray é = ao oposto do k for atualmente. Se for true fica false e vice-versa. Graças ao !
+         esta linha serve para o done property (checkmark)
+         */
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
         saveItems()
@@ -62,10 +70,10 @@ class ToDoListViewController: UITableViewController {
         let alert = UIAlertController(title: "Todo Item", message: "", preferredStyle: .alert)
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
-            
-            let newItem = Item()
+  
+            let newItem = Item(context: self.context)  //e usar aki o context
             newItem.title = textField.text!
-            
+            newItem.done = false
             self.itemArray.append(newItem)
             
             self.saveItems()
@@ -84,27 +92,24 @@ class ToDoListViewController: UITableViewController {
     
     func saveItems() {
         
-        let encoder = PropertyListEncoder()
-        
         do {
-            let data = try encoder.encode(itemArray)
-            try data.write(to: dataFilePath!)
+           try context.save()
         } catch {
-            print("error encoding data array \(error)")
+            print("Error saving context \(error)")
         }
         tableView.reloadData()
         
     }
     
-    func loadItems() {
-        
-        if let data = try? Data(contentsOf: dataFilePath!) {
-            let decoder = PropertyListDecoder()
-            do {
-                itemArray = try decoder.decode([Item].self, from: data)
-            } catch {
-                print("error decoding data array \(error)")
-            }
-        }
-    }
+//    func loadItems() {
+//
+//        if let data = try? Data(contentsOf: dataFilePath!) {
+//            let decoder = PropertyListDecoder()
+//            do {
+//                itemArray = try decoder.decode([Item].self, from: data)
+//            } catch {
+//                print("error decoding data array \(error)")
+//            }
+//        }
+//    }
 }
