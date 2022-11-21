@@ -13,7 +13,7 @@ class CategoryViewController: UITableViewController {
 
     var categoryArray = [Category]()
         
-        
+    // usar como CRUD create, read, update & destroy data
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     
@@ -27,34 +27,46 @@ class CategoryViewController: UITableViewController {
         return categoryArray.count
     }
     
-    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+         
+        let cell =  tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
         
-        let cell = UITableViewCell(style: .default, reuseIdentifier: "CategoryCell")
-        
-        let category = categoryArray[indexPath.row]
-        
-        cell.textLabel?.text = category.name
-        
-        // ternary operator:
-        // value = condition ? valueIfTrue : valueIfFalse
-//        cell.accessoryType = item.done == true ? .checkmark : .none
-        //se for true faz .checkmark; caso contrário faz .none
+        //cell.textLabel?.text = categoryArray[indexPath.row].name
+    
         return cell
     }
     
-
-
-    
-    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
-
-        
-    }
-    
-    
-    //MARK: TableView Delegate Methods
-    
-    
     
     //MARK: DataManipulation Methods
+    
+    //saveData & loadData
+    
+    
+    
+    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
+        //setup deste botao pra add newCategories
+        let alert = UIAlertController(title: "Add new category", message: "", preferredStyle: .alert)
+        
+        var textField = UITextField()
+        
+        let action = UIAlertAction(title: "Add", style: .default) { (action) in
+            
+            let newCategory = Category(context: self.context)
+            newCategory
+            
+        }
+        
+        alert.addAction(action)
+        
+        alert.addTextField { (field) in
+            field.placeholder = "Add new category"
+            textField = textField
+        }
+        
+        present(alert, animated: true, completion: nil )
+    }
+    
+    //MARK: TableView Delegate Methods
+
+    //standBy
 }
