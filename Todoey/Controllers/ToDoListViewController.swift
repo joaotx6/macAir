@@ -13,17 +13,24 @@ class ToDoListViewController: UITableViewController {
     
     var itemArray = [Item]()
     
+    var selectedCategory: Category? {
+        didSet {
+            loadItems()
+        }
+    }
+    
     //para aceder ao persistentContainer do appDelegate:
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+        //print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
-        //o metodo loadItems ja tem um default pra buscar tds os items da lista.
+        /*o metodo loadItems ja tem um default pra buscar tds os items da lista.
         loadItems()
-        
+        So k ele ja n vai ser chamado aki. Será chamado em cima na variavel selectedCategory
+         */
     }
     
     //MARK: - DataSource methods
@@ -61,9 +68,7 @@ class ToDoListViewController: UITableViewController {
          esta linha serve para o done property (checkmark)
          */
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
-        
         saveItems()
-        
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
@@ -77,11 +82,11 @@ class ToDoListViewController: UITableViewController {
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             
-            let newItem = Item(context: self.context)  //e usaΩr aki o context
+            let newItem = Item(context: self.context)  //e usar aki o context
             newItem.title = textField.text!
             newItem.done = false
             self.itemArray.append(newItem)
-            
+            newItem.parentCategory = self.selectedCategory
             self.saveItems()
         }
         
@@ -108,7 +113,17 @@ class ToDoListViewController: UITableViewController {
     }
     
     //Item.fetchRequest() é o default value caso n haja dados para o request. Este default busca tds os items da lista
-    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest() ) {
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), with predicate: NSPredicate? = nil ) {
+        
+        
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+
+        if let additionalPredicate = predicate {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+        } else {
+            request.predicate = categoryPredicate
+        }
+
         
         //este metodo read ou load (R de read) dentro do CRUD, é o unico k n é preciso chamar o context.save ou save.item
         
@@ -132,13 +147,13 @@ extension ToDoListViewController: UISearchBarDelegate {
         
         let request: NSFetchRequest<Item> = Item.fetchRequest()
         
-        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
         //o [cd] diz k n é case sensitive nem diacritico (sensibilidade a acentos)
         
         //sort = ordenar
         request.sortDescriptors = [NSSortDescriptor(key: "title" , ascending: true)]
         
-        loadItems(with: request)
+        loadItems(with: request, with: predicate)
         //o tableView.reloadData() já está no método loadItems, n preciso chamar nesta extension.
     }
     
